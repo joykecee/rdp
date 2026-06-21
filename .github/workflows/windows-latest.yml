@@ -93,7 +93,7 @@ jobs:
 
           $escapedUrl = $url.Replace('"', '\"')
           $escapedUser = 'administrator'.Replace('"','\"')
-          $escapedPass = 'Joykece123'.Replace('"','\"')
+          $escapedPass = 'OLDUSER#06'.Replace('"','\"')
           $osVersion = 'Latest'
 
           $cmd = ".\start.bat `"$escapedUrl`" `"$escapedUser`" `"$escapedPass`" `"$osVersion`""
