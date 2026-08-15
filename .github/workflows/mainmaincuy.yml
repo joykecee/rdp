@@ -1,0 +1,62 @@
+      - name: 🚀 Start Ngrok
+        shell: pwsh
+        run: |
+          $ngrok = (Resolve-Path ".\ngrok\ngrok.exe").Path
+
+          $proc = Start-Process `
+            -FilePath $ngrok `
+            -ArgumentList @("http", "8080", "--region", "ap") `
+            -WindowStyle Hidden `
+            -PassThru
+
+          Start-Sleep -Seconds 3
+
+          if ($proc.HasExited) {
+            Write-Host "❌ Ngrok exited immediately."
+            Write-Host "Exit code: $($proc.ExitCode)"
+            exit 1
+          }
+
+          Write-Host "✅ Ngrok started."
+          Write-Host "PID: $($proc.Id)"
+
+      - name: 🔎 Verify Ngrok process
+        shell: pwsh
+        run: |
+          $proc = Get-Process -Name ngrok -ErrorAction SilentlyContinue
+
+          if ($proc) {
+            Write-Host "✅ Ngrok process is running."
+            Write-Host "PID: $($proc.Id)"
+          }
+          else {
+            Write-Host "❌ Ngrok process NOT found."
+            exit 1
+          }
+
+      - name: 🕐 Wait for Ngrok API
+        shell: pwsh
+        run: |
+          $ready = $false
+
+          for ($i = 1; $i -le 10; $i++) {
+            try {
+              $response = Invoke-RestMethod `
+                -Uri "http://127.0.0.1:4040/api/tunnels" `
+                -ErrorAction Stop
+
+              Write-Host "✅ Ngrok API is responding."
+              $response | ConvertTo-Json -Depth 5
+              $ready = $true
+              break
+            }
+            catch {
+              Write-Host "Waiting for Ngrok... ($i/10)"
+              Start-Sleep -Seconds 2
+            }
+          }
+
+          if (-not $ready) {
+            Write-Host "❌ Ngrok API did not become available."
+            exit 1
+          }
